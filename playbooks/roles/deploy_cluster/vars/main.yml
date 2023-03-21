@@ -1,0 +1,4 @@
+---
+
+infra_stack_name: "ocp4-infra-stack"
+security_stack_name: "ocp4-security-stack"

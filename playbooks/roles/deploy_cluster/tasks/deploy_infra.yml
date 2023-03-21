@@ -1,9 +1,9 @@
 ---
 
-- name: Get vpc facts
-  include_tasks: vpc_facts.yml
-  when:
-    - not (existing_vpc | bool)
+#- name: Get vpc facts
+#  include_tasks: vpc_facts.yml
+#  when:
+#    - not (existing_vpc | bool)
 
 - name: Ensure vpc_id is defined
   fail:
@@ -11,18 +11,32 @@
   when:
     - vpc_id is not defined
 
+#- name: Ensure at least 1 private subnet is configured
+#  fail:
+#    msg: "At least 1 private subnet must be configured"
+#  when:
+#    ec2_private_subnets[0].name is not defined
+
+#- name: Ensure at least 1 public subnet is configured when publish External
+#  fail:
+#    msg: "At least 1 public subnet must be configured when publish External"
+#  when:
+#    ( (ocp_cluster_publish is match("External")) and (ec2_public_subnets[0].name is not defined) )
+
 - name: Deploy Network Cloudformation stack
   delegate_to: localhost
   amazon.aws.cloudformation:
     aws_access_key: "{{ ansible_env.AWS_ACCESS_KEY_ID | default(omit) }}"
     aws_secret_key: "{{ ansible_env.AWS_SECRET_ACCESS_KEY | default(omit) }}"
-    security_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
+    session_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
+    #security_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
     region: "{{ ansible_env.AWS_DEFAULT_REGION | default(omit) }}"
-    ec2_url: "{{ cloudformation_endpoint | default(omit) }}"
+    endpoint_url: "{{ cloudformation_endpoint | default(omit) }}"
+    #ec2_url: "{{ cloudformation_endpoint | default(omit) }}"
     validate_certs: "{{ aws_ssl_enabled }}"
     stack_name: "{{ infra_stack_name }}"
     state: present
-    disable_rollback: false
+    disable_rollback: true
     create_timeout: 10
     template: "{{ playbook_dir }}/../cloudformation/network.yaml"
     template_parameters:

@@ -1,0 +1,176 @@
+---
+
+# TODO: What happens when we don't fill these in
+#rhcos_ver:
+#ocp_ver:
+
+openshift_install: 'openshift-install'
+openshift_client: 'oc'
+kubectl: 'kubectl'
+kubeconfig: "{{ ansible_env.HOME }}/.kube/config"
+
+mirror_base: '/opt/openshift/'
+
+ignition_configs: '{{ mirror_base }}/cluster'
+
+# Default location on Quay OpenShift Content AMI
+pull_secret: '/home/ec2-user/pull-secret.txt'
+
+master_scheduleable: false
+
+#TODO: See if this var can be removed
+cluster_channel: 'stable-{{ocp_ver:3}}'
+
+ssh_key_file: '/home/ec2-user/.ssh/id_rsa'
+
+ocp_base_domain: 'openshift.io'
+
+ocp_cluster_name: 'ocp4'
+
+ocp_cluster_name_verbose: '{{ ocp_cluster_name}}.{{ ocp_base_domain }}'
+
+infrastructure_id: 'abc12'
+
+ocp_sdn: 'OpenShiftSDN'
+
+# External is not yet supported by the custom Cloudformation templates in this repo
+ocp_cluster_publish: 'Internal'
+
+worker_count: 3
+
+# Defaults to local system where quay content AMI registry is running
+mirror_registry: '{{ ansible_env.HOSTNAME }}'
+
+mirror_registry_port: 8443
+
+mirror_transport: 'https'
+
+fips_enabled: false
+
+# Default location of the Quay registry cert on the Content AMI
+certificate_bundle: '/etc/pki/ca-trust/source/anchors/quay.cert'
+# Certificate bundle for the AWS API
+aws_certificate_bundle: '/etc/pki/ca-trust/source/anchors/quay.cert'
+
+# Ensure there is no overlap with the machine network or service network CIDRs
+cluster_network_cidr: '10.128.0.0/14'
+
+cluster_network_prefix: 23
+
+# Ensure there is no overlap with the machine network or cluster network CIDRs
+service_network_cidr: '172.30.0.0/16'
+
+# Note: Do not set this equal to the AWS commercial MTU when installing in C2S
+# 8500 has been tested and works. The number can go slightly higher but be careful
+# when using in combination with IPSec which adds about 50 bytes to the packet frame headers
+mtu: 8500
+
+vxlanPort: 4789
+
+network_policy: 'NetworkPolicy'
+
+# TODO: Try to remove these options
+pip_cmd: 'pip3'
+pip_args: ''
+
+kube_ssl_enabled: false
+
+stage_ignition: true
+
+#TODO: Check if these can be removed for easier install
+#ign_version:
+#  '4.7': '3.1.0'
+
+# Default location of this CR within the Quay registry AMI
+# TODO: results-XYZ seems random, how can we predict that directory
+# Need to add a glob task
+#  - name: Identify results directories
+#    find:
+#      paths: '{{ remote_mirror_data_dir }}/oc-mirror-workspace'
+#      file_type: directory
+#      patterns: "results-*"
+#    register: results
+#update_service_cr_location: "/oc-mirror-workspace/results-1678360307/updateService.yaml"
+
+########################################################################################
+# Variables related to AWS
+
+# VPC variables only needed when deploying a new VPC
+#az_count: 3
+#subnet_bits: 12
+##########################
+
+# Default to undefined to ensure this is set by the user
+# var should look like "subnet-a,subnet-b,subnet-c"
+#ec2_private_subnets:
+
+# Default to undefined to ensure this is set by the user
+# var should look like "subnet-a,subnet-b,subnet-c"
+#ec2_public_subnets:
+
+# Default to blank to ensure this is set by the user
+#rhcos_ami: 
+
+# TODO: Check if these can be removed
+ec2_endpoint: 'https://ec2.us-iso-east-1.c2s.ic.gov'
+s3_endpoint: 'https://s3.us-iso-east-1.c2s.ic.gov'
+route53_endpoint: 'https://route53.us-iso-east-1.c2s.ic.gov'
+elb_endpoint: 'https://elasticloadbalancing.us-iso-east-1.c2s.ic.gov'
+iam_endpoint:  'https://iam.us-iso-east-1.c2s.ic.gov'
+sts_endpoint: 'https://sts.us-iso-east-1.c2s.ic.gov'
+cloudformation_endpoint: 'https://cloudformation.us-iso-east-1.c2s.ic.gov'
+
+# Effects ansible calls to the AWS API, not the OpenShift cluster itself
+aws_ssl_enabled: true
+
+route53_enabled: true
+
+# Default to undefined to ensure this is set by the user
+#hosted_zone_id:
+
+# Default to undefined to ensure this is set by the user
+#ec2_key_name:
+
+# Default to undefined to ensure this is set by the user
+#vpc_id:
+
+# TODO: Check if these can be removed
+internal_api_target_group_arn: ''
+internal_service_target_group_arn: ''
+
+ec2_instance_type:
+  bootstrap: "i3.large"
+  master: "m5.xlarge"
+  worker: "m5.2xlarge"
+
+ec2_volume_size_root:
+  bootstrap: 120
+  master: 120
+  worker: 120
+
+ec2_iam_role:
+  bootstrap: "openshift4-boostrap-role"
+  master: "openshift4-master-role"
+  worker: "openshift4-worker-role"
+
+# TODO: Check if these can be removed
+#ec2_sg:
+#  master:
+#    id: 'sg-'
+#    name: ''
+#  worker:
+#    id:
+#    name:
+
+#########################################################################
+# Variable related to staging ignition files in S3
+s3_bucket: ''
+s3_path: 'ignition'
+##########################################################################
+
+#TODO: Use these to ensure install-config.yaml has iamRoles defined
+create_iam_roles: "false"
+create_security_groups: "true"
+cloudformation_based: true
+#TODO: Confusing name, check if this var can be removed or defaulted
+existing_vpc: false

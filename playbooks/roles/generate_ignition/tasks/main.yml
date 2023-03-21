@@ -1,9 +1,6 @@
 ---
 # tasks file for generate_ignition
 
-- name: Get RHCOS AMI ID
-  include_tasks: get_ami_id.yml
-
 - name: Remove existing ignition configs
   file:
     path: "{{ ignition_configs }}"
@@ -50,16 +47,16 @@
 # TODO: This should be a var somewhere
 - name: Slurp private AWS region API CA
   slurp:
-    src: 'roles/generate_ignition/files/aws_api_ca_bundle.pem'
+    src: "{{ aws_certificate_bundle }}"
   register: slurped_aws_api_ca_bundle_64
 
-- name: Pull in vpc cloudformation facts
-  import_role:
-    name: deploy_cluster
-    tasks_from: vpc_facts.yml
-  when:
-    - (cloudformation_based | bool)
-    - not (existing_vpc | bool)
+# TODO: Highly unlikely to ever be true/used
+#- name: Pull in vpc cloudformation facts
+#  import_role:
+#    name: deploy_cluster
+#    tasks_from: vpc_facts.yml
+#  when:
+#    - (cloudformation_based | bool) and (existing_vpc | bool)
 
 - name: Pull in infra cloudformation facts
   import_role:
