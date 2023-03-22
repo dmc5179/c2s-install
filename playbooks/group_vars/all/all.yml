@@ -1,0 +1,159 @@
+---
+
+credentials_mode: Manual
+
+openshift_install: 'openshift-install'
+openshift_client: 'oc'
+kubectl: 'kubectl'
+kubeconfig: "{{ ansible_env.HOME }}/.kube/config"
+
+mirror_base: '/opt/openshift/'
+
+ignition_configs: '{{ mirror_base }}/cluster'
+
+pull_secret: '/home/ec2-user/pull-secret.txt'
+
+master_scheduleable: false
+
+#TODO: See if this var can be removed
+#cluster_channel: 'stable-{{ocp_ver:3}}'
+
+ssh_key_file: '/home/ec2-user/.ssh/id_rsa'
+
+ocp_base_domain: 'openshift.io'
+
+ocp_cluster_name: 'ocp4'
+
+ocp_cluster_name_verbose: '{{ ocp_cluster_name}}.{{ ocp_base_domain }}'
+
+infrastructure_id: 'abc12'
+
+ocp_sdn: 'OpenShiftSDN'
+
+# External is not yet supported by the custom Cloudformation templates in this repo
+ocp_cluster_publish: 'Internal'
+
+worker_count: 3
+
+mirror_registry: '{{ ansible_env.HOSTNAME }}'
+
+mirror_registry_port: 8443
+
+mirror_transport: 'https'
+
+fips_enabled: false
+
+certificate_bundle: '/etc/pki/ca-trust/source/anchors/quay.cert'
+# Certificate bundle for the AWS API
+#aws_certificate_bundle:
+
+cluster_network_cidr: '10.128.0.0/14'
+
+cluster_network_prefix: 23
+
+service_network_cidr: '172.30.0.0/16'
+
+# Note: Do not set this equal to the AWS commercial MTU when installing in C2S
+mtu: 8500
+
+vxlanPort: 4789
+
+network_policy: 'NetworkPolicy'
+
+kube_ssl_enabled: false
+
+stage_ignition: true
+
+# Default location of this CR within the Quay registry AMI
+# TODO: results-XYZ seems random, how can we predict that directory
+# Need to add a glob task
+#  - name: Identify results directories
+#    find:
+#      paths: '{{ remote_mirror_data_dir }}/oc-mirror-workspace'
+#      file_type: directory
+#      patterns: "results-*"
+#    register: results
+#update_service_cr_location: "/oc-mirror-workspace/results-1678360307/updateService.yaml"
+
+########################################################################################
+# Variables related to AWS
+
+# VPC variables only needed when deploying a new VPC
+#az_count: 3
+#subnet_bits: 12
+##########################
+
+# Set subnets like "sub-a,sub-b,sub-c"
+#ec2_private_subnets: ""
+#ec2_public_subnets: ""
+
+# Note: Set this to the RHCOS AMI in region
+#rhcos_ami: ''
+
+# TODO: May not need to set these unless using VPC endpoints
+ec2_endpoint: 'https://ec2.us-iso-east-1.c2s.ic.gov'
+s3_endpoint: 'https://s3.us-iso-east-1.c2s.ic.gov'
+route53_endpoint: 'https://route53.us-iso-east-1.c2s.ic.gov'
+elb_endpoint: 'https://elasticloadbalancing.us-iso-east-1.c2s.ic.gov'
+iam_endpoint:  'https://iam.us-iso-east-1.c2s.ic.gov'
+sts_endpoint: 'https://sts.us-iso-east-1.c2s.ic.gov'
+cloudformation_endpoint: 'https://cloudformation.us-iso-east-1.c2s.ic.gov'
+aws_ssl_enabled: false
+
+# Disabling Route53 requires the user to create DNS entries as the cluster infra is being created
+route53_enabled: true
+#hosted_zone_id: ''
+
+# Name of the keypair in the EC2 console
+#ec2_key_name: ''
+
+#vpc_id: ''
+
+# TODO: Possibly remove these. These are set by other tasks
+internal_api_target_group_arn: ''
+internal_service_target_group_arn: ''
+
+# Note: These are the minimums that should be used when deploying a standard cluster
+ec2_instance_type:
+  bootstrap: "i3.large"
+  master: "m5.xlarge"
+  worker: "m5.2xlarge"
+
+# Note: These are the minimums that should be used when deploying a standard cluster
+ec2_volume_size_root:
+  bootstrap: 120
+  master: 120
+  worker: 120
+
+# Note: IAM roles and instance profiles share the same name by default
+#       but that is not a requirement of AWS, only the default
+ec2_iam_role:
+  bootstrap: "openshift4-boostrap-role"
+  master: "openshift4-master-role"
+  worker: "openshift4-worker-role"
+
+ec2_instance_profile:
+  bootstrap: "openshift4-boostrap-role"
+  master: "openshift4-master-role"
+  worker: "openshift4-worker-role"
+
+# Note: Only need to set these when disabling CloudFormation creation of security groups
+#ec2_sg:
+#  master:
+#    id: 'sg-'
+#    name: ''
+#  worker:
+#    id:
+#    name:
+
+#########################################################################
+# Variable related to staging ignition files in S3
+#s3_bucket: ''
+#s3_path: 'ignition'
+
+# New vars from testing
+create_iam_roles: "false"
+create_security_groups: "true"
+cloudformation_based: true
+# TODO: Fix name of existing_vpc var. Set to false when VPC already exists....
+existing_vpc: false

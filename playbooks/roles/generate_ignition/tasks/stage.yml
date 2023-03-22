@@ -5,9 +5,9 @@
   amazon.aws.aws_s3:
     aws_access_key: "{{ ansible_env.AWS_ACCESS_KEY_ID | default(omit) }}"
     aws_secret_key: "{{ ansible_env.AWS_SECRET_ACCESS_KEY | default(omit) }}"
-    security_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
+    session_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
     region: "{{ ansible_env.AWS_DEFAULT_REGION | default(omit) }}"
-    s3_url: "{{ s3_endpoint | default(omit) }}"
+    endpoint_url: "{{ s3_endpoint | default(omit) }}"
     validate_certs: "{{ aws_ssl_enabled }}"
     bucket: "{{ s3_bucket }}"
     object: "{{ s3_path }}/{{ item }}"

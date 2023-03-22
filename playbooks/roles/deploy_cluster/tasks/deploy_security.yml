@@ -1,9 +1,10 @@
 ---
 
-- name: Get vpc facts
-  include_tasks: vpc_facts.yml
-  when:
-    - not (existing_vpc | bool)
+# TODO: Unlikely to be creating a new VPC with CloudFormation from this collection
+#- name: Get vpc facts
+#  include_tasks: vpc_facts.yml
+#  when:
+#    - not (existing_vpc | bool)
 
 - name: Ensure vpc_id is defined
   fail:
@@ -11,20 +12,29 @@
   when:
     - vpc_id is not defined
 
-- name: Ensure vpc_cidr is defined
-  fail:
-    msg: "vpc_cidr must be defined"
-  when:
-    - vpc_cidr is not defined
+- name: Lookup vpc CIDR
+  amazon.aws.ec2_vpc_net_info:
+    aws_access_key: "{{ ansible_env.AWS_ACCESS_KEY_ID | default(omit) }}"
+    aws_secret_key: "{{ ansible_env.AWS_SECRET_ACCESS_KEY | default(omit) }}"
+    session_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
+    region: "{{ ansible_env.AWS_DEFAULT_REGION | default(omit) }}"
+    endpoint_url: "{{ ec2_endpoint | default(omit) }}"
+    validate_certs: "{{ aws_ssl_enabled }}"
+    vpc_ids: "{{ vpc_id }}"
+  register: vpc_info
+
+- name: Set vpc_cidr fact
+  ansible.builtin.set_fact:
+    vpc_cidr: "{{ vpc_info.vpcs[0].cidr_block}}"
 
 - name: Deploy OCP Security Cloudformation stack
   delegate_to: localhost
   amazon.aws.cloudformation:
     aws_access_key: "{{ ansible_env.AWS_ACCESS_KEY_ID | default(omit) }}"
     aws_secret_key: "{{ ansible_env.AWS_SECRET_ACCESS_KEY | default(omit) }}"
-    security_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
+    session_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
     region: "{{ ansible_env.AWS_DEFAULT_REGION | default(omit) }}"
-    ec2_url: "{{ cloudformation_endpoint | default(omit) }}"
+    endpoint_url: "{{ cloudformation_endpoint | default(omit) }}"
     validate_certs: "{{ aws_ssl_enabled }}"
     stack_name: "{{ security_stack_name }}"
     state: present
@@ -36,8 +46,8 @@
       VpcCidr: "{{ vpc_cidr }}"
       VpcId: "{{ vpc_id }}"
       PrivateSubnets: "{{ ec2_private_subnets }}"
-      CreateIAMRoles: "false"
-      CreateSecurityGroups: "true"
+      CreateIAMRoles: "{{ create_iam_roles }}"
+      CreateSecurityGroups: "{{ create_security_groups }}"
   register: sec_stack_outputs
   when:
     - cloudformation_based | bool

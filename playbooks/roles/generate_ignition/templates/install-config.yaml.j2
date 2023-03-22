@@ -25,8 +25,6 @@ networking:
   - cidr: "{{ cluster_network_cidr }}"
     hostPrefix: {{ cluster_network_prefix }}
   networkType: "{{ ocp_sdn }}"
-  machineNetwork:
-  - cidr: "{{ machine_network_cidr }}"
   serviceNetwork:
   - "{{ service_network_cidr }}"
 platform:
@@ -54,13 +52,13 @@ platform:
       CLAP_OFF: "NEVER"
       CLAP_ON: "NEVER"
     subnets:
-    - {{ ec2_private_subnets[0] }}
-    - {{ ec2_private_subnets[1] }}
-    - {{ ec2_private_subnets[2] }}
+    - {{ ec2_private_subnet_list[0] }}
+    - {{ ec2_private_subnet_list[1] }}
+    - {{ ec2_private_subnet_list[2] }}
 {% if ocp_cluster_publish == 'External' %}
-    - {{ ec2_public_subnets[0] }}
-    - {{ ec2_public_subnets[1] }}
-    - {{ ec2_public_subnets[2] }}
+    - {{ ec2_public_subnet_list[0] }}
+    - {{ ec2_public_subnet_list[1] }}
+    - {{ ec2_public_subnet_list[2] }}
 {% endif %}
 pullSecret: '{{ slurped_pull_secret_b64.content | b64decode | trim }}'
 sshKey: '{{ slurped_key_b64.content | b64decode | trim }}'
@@ -71,11 +69,8 @@ additionalTrustBundle: |
 {{ slurped_registry_ca_bundle_b64.content | b64decode | trim }}
 imageContentSources:
 - mirrors:
-  - {{ mirror_registry }}:{{ mirror_registry_port }}/ocp4/openshift4
+  - {{ mirror_registry }}:{{ mirror_registry_port }}/openshift/release-images
   source: quay.io/openshift-release-dev/ocp-release
 - mirrors:
-  - {{ mirror_registry }}:{{ mirror_registry_port }}/ocp4/openshift4
+  - {{ mirror_registry }}:{{ mirror_registry_port }}/openshift/release
   source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
-- mirrors:
-  - {{ mirror_registry }}:{{ mirror_registry_port }}/ocp4/openshift4
-  source: quay.io/openshift-release-dev/ocp-release-nightly

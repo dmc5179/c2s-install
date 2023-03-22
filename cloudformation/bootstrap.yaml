@@ -191,7 +191,6 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       ImageId: !Ref RhcosAmi
-      #IamInstanceProfile: !Ref BootstrapInstanceProfile
       IamInstanceProfile: !Ref BootstrapInstanceProfileName
       InstanceType: "i3.large"
       NetworkInterfaces:

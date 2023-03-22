@@ -1,9 +1,9 @@
 ---
 
-- name: Get vpc facts
-  include_tasks: vpc_facts.yml
-  when:
-    - (cloudformation_based | bool) and ( not existing_vpc | bool)
+#- name: Get vpc facts
+#  include_tasks: vpc_facts.yml
+#  when:
+#    - (cloudformation_based | bool) and ( not existing_vpc | bool)
 
 - name: Get infra facts
   include_tasks: infra_facts.yml
@@ -15,19 +15,33 @@
   when:
     - (cloudformation_based | bool)
 
-- name: Get RHCOS AMI ID
-  import_role:
-    name: generate_ignition
-    tasks_from: get_ami_id.yml
+# This is set manually now
+#- name: Get RHCOS AMI ID
+#  import_role:
+#    name: generate_ignition
+#    tasks_from: get_ami_id.yml
+
+- name: Get ignition config version
+  command: "jq -c -r '.ignition.version' {{ ignition_configs }}/master.ign"
+  register: jq_results
+
+- name: Set ignition config version fact
+  set_fact:
+    ignition_version: "{{ jq_results.stdout }}"
+
+- set_fact:
+    ec2_private_subnet_list: "{{ ec2_private_subnets | split(',')}}"
+  when:
+    - ec2_private_subnets is defined
 
 - name: Deploy control plane Cloudformation stack
   delegate_to: localhost
   amazon.aws.cloudformation:
     aws_access_key: "{{ ansible_env.AWS_ACCESS_KEY_ID | default(omit) }}"
     aws_secret_key: "{{ ansible_env.AWS_SECRET_ACCESS_KEY | default(omit) }}"
-    security_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
+    session_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
     region: "{{ ansible_env.AWS_DEFAULT_REGION | default(omit) }}"
-    ec2_url: "{{ cloudformation_endpoint | default(omit) }}"
+    endpoint_url: "{{ cloudformation_endpoint | default(omit) }}"
     validate_certs: "{{ aws_ssl_enabled | default(omit) }}"
     stack_name: "{{ cp_stack_name }}"
     state: present
@@ -38,13 +52,13 @@
       #ClusterName: "{{ ocp_cluster_name }}"
       InfrastructureName: "{{ infrastructure_id }}"
       RhcosAmi: "{{ rhcos_ami }}"
-      Master0Subnet: "{{ ec2_private_subnets[0] }}"
-      Master1Subnet: "{{ ec2_private_subnets[1] }}"
-      Master2Subnet: "{{ ec2_private_subnets[2] }}"
+      Master0Subnet: '{{ ec2_private_subnet_list[0] }}'
+      Master1Subnet: '{{ ec2_private_subnet_list[1] }}'
+      Master2Subnet: '{{ ec2_private_subnet_list[2] }}'
       IgnitionLocation: "http://{{ s3_bucket }}.s3.us-iso-east-1.c2s.ic.gov/{{ s3_path }}/master.ign"
       MasterInstanceProfileName: "{{ ec2_instance_profile.master }}"
       MasterSecurityGroupId: "{{ ec2_sg.master.id }}"
-      IgnitionVersion: "3.2.0"
+      IgnitionVersion: "{{ ignition_version }}"
   register: master_stack_outputs
   tags:
     - masters
