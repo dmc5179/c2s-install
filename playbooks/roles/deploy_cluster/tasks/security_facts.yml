@@ -5,22 +5,29 @@
   amazon.aws.cloudformation_info:
     aws_access_key: "{{ ansible_env.AWS_ACCESS_KEY_ID | default(omit) }}"
     aws_secret_key: "{{ ansible_env.AWS_SECRET_ACCESS_KEY | default(omit) }}"
-    security_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
+    session_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
     region: "{{ ansible_env.AWS_DEFAULT_REGION | default(omit) }}"
-    #ec2_url: "{{ cloudformation_endpoint | default(omit) }}"
+    endpoint_url: "{{ cloudformation_endpoint | default(omit) }}"
     validate_certs: "{{ aws_ssl_enabled }}"
     stack_name: "{{ security_stack_name }}"
     stack_resources: true
   register: sec_stack_outputs
 
+#- debug:
+#    var: sec_stack_outputs
+
+  # Set IAM role facts from security stack if they were created
 - name: Set IAM Role facts
   set_fact:
     ec2_instance_profile:
-      master: "{{ sec_stack_outputs.cloudformation.openshift4sec.stack_resources.MasterInstanceProfile }}"
-      worker: "{{ sec_stack_outputs.cloudformation.openshift4sec.stack_resources.WorkerInstanceProfile }}"
+      master: "{{ sec_stack_outputs.cloudformation.openshift4security.stack_resources.MasterInstanceProfile }}"
+      worker: "{{ sec_stack_outputs.cloudformation.openshift4security.stack_resources.WorkerInstanceProfile }}"
   when:
-    - sec_stack_outputs.cloudformation.openshift4sec.stack_resources.MasterInstanceProfile is defined
+    - (create_iam_roles | bool)
+#    - sec_stack_outputs.cloudformation.openshift4security.stack_resources.MasterInstanceProfile is defined
 
+  # Ensure IAM instance profiles are defined either by the user or from the 
+  # security cloud formation stack
 - name: Check that IAM instance profiles are defined
   fail:
     msg: Master and Worker IAM instance profiles must be set
@@ -32,41 +39,47 @@
   amazon.aws.ec2_group_info:
     aws_access_key: "{{ ansible_env.AWS_ACCESS_KEY_ID | default(omit) }}"
     aws_secret_key: "{{ ansible_env.AWS_SECRET_ACCESS_KEY | default(omit) }}"
-    security_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
+    session_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
     region: "{{ ansible_env.AWS_DEFAULT_REGION | default(omit) }}"
-    ec2_url: "{{ ec2_endpoint | default(omit) }}"
+    endpoint_url: "{{ ec2_endpoint | default(omit) }}"
     validate_certs: "{{ aws_ssl_enabled }}"
     filters:
-      group-id: '{{ sec_stack_outputs.cloudformation.openshift4sec.stack_resources.MasterSecurityGroup }}'
+      group-id: '{{ sec_stack_outputs.cloudformation.openshift4security.stack_resources.MasterSecurityGroup }}'
   register: master_sg_info
   when:
-    - sec_stack_outputs.cloudformation.openshift4sec.stack_resources.MasterSecurityGroup is defined
+    - (create_security_groups | bool)
+#    - sec_stack_outputs.cloudformation.openshift4security.stack_resources.MasterSecurityGroup is defined
 
 - name: Get worker security group info
   delegate_to: localhost
   amazon.aws.ec2_group_info:
     aws_access_key: "{{ ansible_env.AWS_ACCESS_KEY_ID | default(omit) }}"
     aws_secret_key: "{{ ansible_env.AWS_SECRET_ACCESS_KEY | default(omit) }}"
-    security_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
+    session_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
     region: "{{ ansible_env.AWS_DEFAULT_REGION | default(omit) }}"
-    ec2_url: "{{ ec2_endpoint | default(omit) }}"
+    endpoint_url: "{{ ec2_endpoint | default(omit) }}"
     validate_certs: "{{ aws_ssl_enabled }}"
     filters:
-      group-id: '{{ sec_stack_outputs.cloudformation.openshift4sec.stack_resources.WorkerSecurityGroup }}'
+      group-id: '{{ sec_stack_outputs.cloudformation.openshift4security.stack_resources.WorkerSecurityGroup }}'
   register: worker_sg_info
   when:
-    - sec_stack_outputs.cloudformation.openshift4sec.stack_resources.WorkerSecurityGroup is defined
+    - (create_security_groups | bool)
+#    - sec_stack_outputs.cloudformation.openshift4security.stack_resources.WorkerSecurityGroup is defined
 
 - name: Set security group facts
   set_fact:
     ec2_sg:
       master:
-        id: '{{ sec_stack_outputs.cloudformation.openshift4sec.stack_resources.MasterSecurityGroup }}'
+        id: '{{ sec_stack_outputs.cloudformation.openshift4security.stack_resources.MasterSecurityGroup }}'
         name: "{{ master_sg_info.security_groups[0].group_name }}"
       worker:
-        id: '{{ sec_stack_outputs.cloudformation.openshift4sec.stack_resources.WorkerSecurityGroup }}'
+        id: '{{ sec_stack_outputs.cloudformation.openshift4security.stack_resources.WorkerSecurityGroup }}'
         name: "{{ worker_sg_info.security_groups[0].group_name}}"
+  when:
+    - (create_security_groups | bool)
 
+  # Ensure master and worker security groups are either set by the user or
+  # returned from the security cloud formation stakc
 - name: Check that security group vars are defined
   fail:
     msg: Master and Worker Security Groups must be defined

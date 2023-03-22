@@ -1,13 +1,26 @@
 ---
 
+- name: Get ignition config version
+  command: "jq -c -r '.ignition.version' {{ ignition_configs }}/worker.ign"
+  register: jq_results
+
+- name: Set ignition config version fact
+  set_fact:
+    ignition_version: "{{ jq_results.stdout }}"
+
+- set_fact:
+    ec2_private_subnet_list: "{{ ec2_private_subnets | split(',')}}"
+  when:
+    - ec2_private_subnets is defined
+
 - name: Deploy worker {{ item }} cloudformation stack
   delegate_to: localhost
   amazon.aws.cloudformation:
     aws_access_key: "{{ ansible_env.AWS_ACCESS_KEY_ID | default(omit) }}"
     aws_secret_key: "{{ ansible_env.AWS_SECRET_ACCESS_KEY | default(omit) }}"
-    security_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
+    session_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
     region: "{{ ansible_env.AWS_DEFAULT_REGION | default(omit) }}"
-    #ec2_url: "{{ cloudformation_endpoint | default(omit) }}"
+    endpoint_url: "{{ cloudformation_endpoint | default(omit) }}"
     validate_certs: "{{ aws_ssl_enabled }}"
     stack_name: "{{ workers_stack_name }}0"
     state: present
@@ -17,12 +30,12 @@
     template_parameters:
       ClusterName: "{{ ocp_cluster_name }}"
       InfrastructureName: "{{ infrastructure_id }}"
-      RhcosAmi: "{{ rhcos_ami[rhcos_ver] }}"
-      Subnet: "{{ subnets[item].id }}"
+      RhcosAmi: "{{ rhcos_ami }}"
+      Subnet: '{{ ec2_private_subnet_list[item] }}'
       IgnitionLocation: "http://{{ s3_bucket }}" # Need rest of link here
       WorkerSecurityGroupId: "{{ ec2_sg.worker.id }}"
       WorkerInstanceProfileName: "{{ ec2_instance_profile.worker }}"
-      IgnitionVersion: "{{ ign_ver[rhcos_ver] }}"
-  with_sequence: start=0 end="{{ end_at }}"
+      IgnitionVersion: "{{ ignition_version }}"
+  with_sequence: start=0 end={{ end_at }}
   vars:
     - end_at: {{ worker_count }} - 1

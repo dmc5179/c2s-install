@@ -5,6 +5,31 @@
   become: false
   tasks:
 
-    - name: Deploy OpenShift4 UPI Cluster
+    - name: Deploy OpenShift4 Infra
       import_role:
         name: deploy_cluster
+        tasks_from: deploy_infra.yml
+
+    - name: Deploy OpenShift4 security groups
+      import_role:
+        name: deploy_cluster
+        tasks_from: deploy_security.yml
+
+    - name: Generate Ignition Files
+      import_role:
+        name: generate_ignition
+
+    - name: Stage Ignition Configs
+      import_role:
+        name: generate_ignition
+        tasks_from: stage.yml
+
+    - name: Deploy OpenShift4 bootstrap
+      import_role:
+        name: deploy_cluster
+        tasks_from: deploy_bootstrap.yml
+
+    - name: Deploy OpenShift4 Control Plane
+      import_role:
+        name: deploy_cluster
+        tasks_from: deploy_control_plane.yml

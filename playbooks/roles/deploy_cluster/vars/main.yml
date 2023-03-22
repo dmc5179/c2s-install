@@ -1,4 +1,10 @@
 ---
 
-infra_stack_name: "ocp4-infra-stack"
-security_stack_name: "ocp4-security-stack"
+# Don't change these names
+# Ansible doesn't like vars in a var so these aren't really vars yet
+# Also, ansible does not like - in a var and AWS does not like _ in a stack name
+infra_stack_name: "openshift4infra"
+security_stack_name: "openshift4security"
+bootstrap_stack_name: "openshift4bootstrap"
+cp_stack_name: "openshift4controlplane"
+workers_stack_name: "openshift4worker"

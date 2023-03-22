@@ -72,6 +72,16 @@
   when:
     - (cloudformation_based | bool)
 
+- set_fact:
+    ec2_private_subnet_list: "{{ ec2_private_subnets | split(',')}}"
+  when:
+    - ec2_private_subnets is defined
+
+- set_fact:
+    ec2_public_subnet_list: "{{ ec2_public_subnets | split(',')}}"
+  when:
+    - ec2_public_subnets is defined
+
 - name: Copy template install-config.yaml
   template:
     src: install-config.yaml.j2
@@ -295,38 +305,39 @@
 #    - '{{ ignition_configs }}/manifests/*.y*ml'
 #    - '{{ ignition_configs }}/openshift/*.y*ml'
 
-- name: Change private subnet 0 name
-  ansible.builtin.replace:
-    path: "{{ item }}"
-    regexp: "{{infrastructure_id}}-private-{{private_subnets[0].zone}}"
-    replace: "{{ private_subnets[0].name }}"
-  with_fileglob:
-    - '{{ ignition_configs }}/manifests/*.y*ml'
-    - '{{ ignition_configs }}/openshift/*.y*ml'
-  when:
-    - (private_subnets[0].name is defined)
-
-- name: Change private subnet 1 name
-  ansible.builtin.replace:
-    path: "{{ item }}"
-    regexp: "{{infrastructure_id}}-private-{{private_subnets[1].zone}}"
-    replace: "{{ private_subnets[1].name }}"
-  with_fileglob:
-    - '{{ ignition_configs }}/manifests/*.y*ml'
-    - '{{ ignition_configs }}/openshift/*.y*ml'
-  when:
-    - (private_subnets[1].name is defined)
-
-- name: Change private subnet 2 name
-  ansible.builtin.replace:
-    path: "{{ item }}"
-    regexp: "{{infrastructure_id}}-private-{{private_subnets[2].zone}}"
-    replace: "{{ private_subnets[2].name }}"
-  with_fileglob:
-    - '{{ ignition_configs }}/manifests/*.y*ml'
-    - '{{ ignition_configs }}/openshift/*.y*ml'
-  when:
-    - (private_subnets[2].name is defined)
+# TODO: Changing the private subnet name may not be necessary anymore
+#- name: Change private subnet 0 name
+#  ansible.builtin.replace:
+#    path: "{{ item }}"
+#    regexp: "{{infrastructure_id}}-private-{{private_subnets[0].zone}}"
+#    replace: "{{ private_subnets[0].name }}"
+#  with_fileglob:
+#    - '{{ ignition_configs }}/manifests/*.y*ml'
+#    - '{{ ignition_configs }}/openshift/*.y*ml'
+#  when:
+#    - (private_subnets[0].name is defined)
+#
+#- name: Change private subnet 1 name
+#  ansible.builtin.replace:
+#    path: "{{ item }}"
+#    regexp: "{{infrastructure_id}}-private-{{private_subnets[1].zone}}"
+#    replace: "{{ private_subnets[1].name }}"
+#  with_fileglob:
+#    - '{{ ignition_configs }}/manifests/*.y*ml'
+#    - '{{ ignition_configs }}/openshift/*.y*ml'
+#  when:
+#    - (private_subnets[1].name is defined)
+#
+#- name: Change private subnet 2 name
+#  ansible.builtin.replace:
+#    path: "{{ item }}"
+#    regexp: "{{infrastructure_id}}-private-{{private_subnets[2].zone}}"
+#    replace: "{{ private_subnets[2].name }}"
+#  with_fileglob:
+#    - '{{ ignition_configs }}/manifests/*.y*ml'
+#    - '{{ ignition_configs }}/openshift/*.y*ml'
+#  when:
+#    - (private_subnets[2].name is defined)
 
 
 # TODO: These block of tasks change the ingress load balancer. Need to check what is used by default
