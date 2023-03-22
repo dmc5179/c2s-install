@@ -69,8 +69,8 @@ additionalTrustBundle: |
 {{ slurped_registry_ca_bundle_b64.content | b64decode | trim }}
 imageContentSources:
 - mirrors:
-  - {{ mirror_registry }}:{{ mirror_registry_port }}/ocp4/openshift4
+  - {{ mirror_registry }}:{{ mirror_registry_port }}/openshift/release-images
   source: quay.io/openshift-release-dev/ocp-release
 - mirrors:
-  - {{ mirror_registry }}:{{ mirror_registry_port }}/ocp4/openshift4
+  - {{ mirror_registry }}:{{ mirror_registry_port }}/openshift/release
   source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
