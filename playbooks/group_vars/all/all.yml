@@ -64,16 +64,8 @@ kube_ssl_enabled: false
 
 stage_ignition: true
 
-# Default location of this CR within the Quay registry AMI
-# TODO: results-XYZ seems random, how can we predict that directory
-# Need to add a glob task
-#  - name: Identify results directories
-#    find:
-#      paths: '{{ remote_mirror_data_dir }}/oc-mirror-workspace'
-#      file_type: directory
-#      patterns: "results-*"
-#    register: results
-#update_service_cr_location: "/oc-mirror-workspace/results-1678360307/updateService.yaml"
+# Default location of the oc-mirror workspace
+oc_mirror_workspace_dir: "/oc-mirror-workspace"
 
 ########################################################################################
 # Variables related to AWS

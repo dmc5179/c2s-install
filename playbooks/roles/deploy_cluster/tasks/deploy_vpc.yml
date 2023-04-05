@@ -21,4 +21,3 @@
   register: vpc_stack_outputs
   tags:
     - vpc
-

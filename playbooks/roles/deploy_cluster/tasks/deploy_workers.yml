@@ -32,10 +32,10 @@
       InfrastructureName: "{{ infrastructure_id }}"
       RhcosAmi: "{{ rhcos_ami }}"
       Subnet: '{{ ec2_private_subnet_list[item] }}'
-      IgnitionLocation: "http://{{ s3_bucket }}" # Need rest of link here
+      IgnitionLocation: "http://{{ s3_bucket }}.s3.us-iso-east-1.c2s.ic.gov/{{ s3_path }}/worker.ign"
       WorkerSecurityGroupId: "{{ ec2_sg.worker.id }}"
       WorkerInstanceProfileName: "{{ ec2_instance_profile.worker }}"
       IgnitionVersion: "{{ ignition_version }}"
   with_sequence: start=0 end={{ end_at }}
   vars:
-    - end_at: {{ worker_count }} - 1
+    - end_at: "{{ worker_count }} - 1"

@@ -22,11 +22,11 @@
 #       not sure if it return the public key when key already exists
 - name: Generate SSH keypair for cluster nodes
   community.crypto.openssh_keypair:
-   path: "{{ ssh_key_file }}"
-   size: 4096
-   type: rsa
-   force: false
-   state: present
+    path: "{{ ssh_key_file }}"
+    size: 4096
+    type: rsa
+    force: false
+    state: present
 
 # TODO: See task TODO above
 - name: Fetch public key
@@ -262,7 +262,7 @@
   with_fileglob:
     - '{{ ignition_configs }}/manifests/*.y*ml'
     - '{{ ignition_configs }}/openshift/*.y*ml'
-  when: 
+  when:
     - ec2_instance_profile.master is defined
 
 - name: Change master security group from the default pattern

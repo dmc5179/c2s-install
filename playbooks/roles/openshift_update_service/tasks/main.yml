@@ -27,6 +27,15 @@
     validate_certs: '{{ kube_ssl_enabled }}'
     definition: "{{ lookup('template', 'templates/update-service-subscription.yaml.j2') }}"
 
+- name: Locate OSUS CR created by oc-mirror
+  delegate_to: localhost
+  ansible.builtin.find:
+    paths: "{{ oc_mirror_workspace_dir }}"
+    recurse: true
+    file_type: file
+    patterns: "updateService.yaml"
+  register: update_service_file_location
+
 - name: Deploy the OSUS CR
   delegate_to: localhost
   community.kubernetes.k8s:
@@ -34,4 +43,4 @@
     wait: true
     kubeconfig: "{{ kubeconfig }}"
     validate_certs: '{{ kube_ssl_enabled }}'
-    definition: "{{ update_service_cr_location }}"
+    definition: "{{ update_service_file_location.files[0].path }}"
